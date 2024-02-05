@@ -1,0 +1,83 @@
+---
+title: "Assignment 1_FML"
+author: "Teja Tarapatla"
+date: "2024-02-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Load the dataset (Taken the dataset from Business Analytics Fall Class which we have given for practice and saved as 'Transaction')
+```{r}
+library(dplyr)
+
+Transaction <- read.csv("C:/Users/divya/Downloads/transaction (1).csv")
+
+```
+
+##Viewing the dataset
+```{r}
+
+head(Transaction)
+
+```
+
+##Descriptive statistics for quantitative variables
+
+```{r}
+
+quantitative_variables <- Transaction[, c("Quantity", "UnitPrice")]
+
+summary(quantitative_variables)
+
+```
+
+##Descriptive statistics for categorical variables
+
+```{r}
+
+Categorical_variables <- Transaction[, c("Product", "Country")]
+
+table(Categorical_variables)
+
+```
+#Transforming variables
+
+```{r}
+
+log(Transaction$UnitPrice)
+
+```
+
+```{r}
+
+log(Transaction$TransactionID)
+
+```
+
+```{r}
+
+R <- Transaction$UnitPrice- Transaction$TransactionID - max(Transaction$UnitPrice)/min(Transaction$UnitPrice)
+
+R
+
+```
+
+##Plotting Variable
+
+```{r}
+
+hist(Transaction$UnitPrice,main = "HISTOGRAM OF UNITPRICEE")
+
+```
+
+##scatterplot of 2 variables
+
+```{r}
+
+plot(Transaction$UnitPrice, Transaction$TransactionID, main = "scatterplot")
+
+```
+
