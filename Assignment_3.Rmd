@@ -1,0 +1,323 @@
+---
+title: "FML Assignment 3"
+output: html_document
+date: "2024-03-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+```{r}
+library(reshape)
+```
+```{r}
+library(reshape2)
+```
+
+```{r}
+library(caret)
+```
+```{r}
+library(e1071)
+
+## Loading the data csv file
+U_B.df <- read.csv("C:/Users/TEJA/Downloads/UniversalBank (1).csv")
+
+head(U_B.df)
+```
+```{r}
+tail(U_B.df)
+```
+```{r}
+## defining Column names
+colnames(U_B.df)
+```
+```{r}
+#converting information into factors using the categories.
+
+U_B.df$`Personal Loan` = as.factor(U_B.df$Personal.Loan)
+U_B.df$Online = as.factor(U_B.df$Online)
+U_B.df$CreditCard = as.factor(U_B.df$CreditCard)
+```
+
+```{r}
+#dividing the data in to two halves, with 40% going into the validation set and 60% going into the training set
+set.seed(456)
+
+# 60 % training data and 40% Validation data respectively
+U_B.df.train.data <- sample(row.names(U_B.df), 0.6*dim(U_B.df)[1])
+U_B.df.valid.data <- setdiff(row.names(U_B.df), U_B.df.train.data)
+
+# assigning training data and validation data to a dataframe from dataset respectively
+U_B.df.train <- U_B.df[U_B.df.train.data, ]
+U_B.df.valid <- U_B.df[U_B.df.valid.data, ]
+
+# Duplicating the data frame UB.train
+train <- U_B.df[U_B.df.train.data, ]
+# Duplicating the data frame UB.valid
+valid = U_B.df[U_B.df.train.data,]
+```
+
+
+##A. Create a pivot table for the training data with Online as a column variable, CC as a row variable, and Loan as a secondary row variable. The values inside the table should convey the count. In R use functions melt() and cast(), or function table().
+
+```{r}
+
+## melt data from data
+melted.df = melt(train,id=c("CreditCard","Personal.Loan"),variable= "Online")
+
+```
+
+```{r}
+
+# Casting the melted data
+cast.df <- dcast(melted.df, CreditCard + Personal.Loan ~ value, fun.aggregate = length)
+
+# Casting column number 14: Personal loan, ID, and credit card, respectively
+cast.df[,c(1,2,3,14)]
+
+```
+
+#B. Consider the task of classifying a customer who owns a bank credit card and is actively using online banking services. Looking at the pivot table, what is the probability that this customer will accept the loan offer? [This is the probability of loan acceptance (Loan = 1) conditional on having a bank credit card (CC = 1) and being an active user of online banking services (Online = 1)].
+
+```{r}
+
+#According to the pivot table, the value for Loan is 89, and the value for CC is 
+
+UB.df.Loan.CC1 <- 89/3000
+
+# which is 29 %.
+UB.df.Loan.CC1
+
+```
+##C. Create two separate pivot tables for the training data. One will have Loan (rows) as a function of Online (columns) and the other will have Loan (rows) as a function of CC.
+
+
+```{r}
+
+ ## transforming the train data frame into a lengthy format, using "Online" as a variable to be melted and "Personal.Loan" as an identification
+melt1.df = melt(train,id=c("Personal.Loan"),variable = "Online")
+
+```
+
+```{r}
+
+## creating a long format out of the train data frame, using "CreditCard" as an identifier and "Online" as a variable that needs to be melted
+melt2.df = melt(train,id=c("CreditCard"),variable = "Online")
+
+```
+
+```{r}
+
+# Casting Personal loan and online values
+# Assuming both Personal.Loan and Online are binary (0 or 1)
+cast1.df =dcast(melt1.df,`Personal.Loan`~Online)
+
+```
+
+```{r}
+
+# Casting Personal loan and online values
+cast2.df=dcast(melt2.df,CreditCard~Online)
+
+```
+
+```{r}
+
+#shows the number of personal loans in reference to online
+UB.df.Loanonline=cast1.df[,c(1,13)]
+UB.df.LoanCC = cast2.df[,c(1,14)]
+UB.df.Loanonline
+
+```
+
+```{r}
+
+# shows the number of credit cards in reference to Online.
+UB.df.LoanCC
+
+```
+
+##D. Compute the following quantities [P (A | B) means “the probability of A given B”]:#1.P (CC = 1 | Loan = 1) (the proportion of credit card holders among the loan acceptors) #2.P(Online=1|Loan=1) #3.P (Loan = 1) (the proportion of loan acceptors) #4.P(CC=1|Loan=0) #5.P(Online=1|Loan=0) #6.P(Loan=0)
+
+```{r}
+
+# creating a pivot table with the columns 14 and 10 representing personal loan
+table(train[,c(14,10)])
+
+```
+
+```{r}
+
+# Creating a pivot table for column 13 and 10 which is online and personal loan
+
+table(train[,c(13,10)])
+
+```
+
+```{r}
+
+# Personal loan pivot table There are 2725 and 275 from training, respectively
+table(train[,c(10)])
+
+```
+
+
+1.P (CC = 1 | Loan = 1
+
+```{r}
+
+## We can obtain the CC= 1 and Loan = 1 values by referring to the above p
+UB.df.CCUB.Loan1 = 89/(89+200)
+UB.df.CCUB.Loan1
+
+```
+
+2.P(Online=1|Loan=1)
+
+```{r}
+
+##We can get the online = 1 and loan = 1 values from the pivot table above UB.ONUB.Loan1
+UB.df.ONUB.df.Loan1 =177/(177+112)
+
+```
+
+
+3.P(Loan = 1)
+
+```{r}
+
+ # By referring the above pivot table we can get the Loan = 1
+UB.df.Loan1 =289/(289+2711)
+UB.df.Loan1
+
+```
+
+4.P(CC=1|Loan=0)
+
+```{r}
+
+#Using the pivot table above, we can obtain the CC = 1 and Loan = 0 values
+UB.df.CCLoan.01= 794/(794+1917) 
+UB.df.CCLoan.01
+
+```
+
+5.P(Online=1|Loan=0)
+
+```{r}
+
+# We can get the online = 1 and loan = 0 values from the pivot table above.
+UB.df.ON1.L0= 1665/(1665+1046)
+UB.df.ON1.L0
+
+```
+
+6.P(Loan=0)
+
+```{r}
+
+# We can obtain the Loan = 0 values by the pivot table above.
+UB.df.Loan0= 2711/(2711+289)
+UB.df.Loan0
+
+```
+
+##E. Use the quantities computed above to compute the naive Ba1 probability P(Loan = 1 | CC = 1, Online = 1).
+
+```{r}
+
+# Given probabilities
+Probability_CC_given_Loan1 <- 0.096
+Probability_Online_given_Loan1 <- 0.833
+Probabilities_Loan1 <- 0.0125
+
+```
+
+```{r}
+
+# Calculate Naive Bayes probability P(Loan = 1 | CC = 1, Online = 1)
+#Universal_Bank_Naivebayes <- (P_CC_given_Loan1 * P_Online_given_Loan1 * P_Loan1) / (P_CC * P_Online)
+
+UB.df_Naivebayes <- (Probability_CC_given_Loan1)*(Probability_Online_given_Loan1)*(Probabilities_Loan1)
+UB.df_Naivebayes
+
+```
+
+##F. Compare this value with the one obtained from the pivot table in (b). Which is a more accurate estimate?
+
+```{r}
+
+# Naive Bayes Probability (from calculation in E)
+naive_bayes_probability <- 0.0009996
+
+# Pivot Table Probability (from part B)
+pivot_table_probability <- 0.02966667
+
+# Comparing the probabilities and print a message indicating which is more accurate
+if (naive_bayes_probability > pivot_table_probability) {
+  message("Naive Bayes Probability is more accurate: ", naive_bayes_probability)
+} else if (naive_bayes_probability < pivot_table_probability) {
+  message("Pivot Table Probability is more accurate: ", pivot_table_probability)
+} else {
+  message("Both probabilities are the same: ", naive_bayes_probability)
+}
+
+```
+
+Based on the comparison, the pivot table probability (0.02966667) is considered more accurate compared to the Naive Bayes probability.
+
+##G. Which of the entries in this table are needed for computing P(Loan = 1 | CC = 1, Online = 1)? Run naive Bayes on the data. Examine the model output on training data, and find the entry that corresponds to P(Loan = 1 | CC = 1, Online = 1). Compare this to the number you obtained in (E).
+
+```{r}
+
+names(U_B.df)
+
+```
+
+```{r}
+
+names(U_B.df.train)
+
+```
+
+```{r}
+
+# Selecting the relevant columns for training
+U_B.df.train <- U_B.df.train[, c("CreditCard", "Online", "Personal Loan")]
+
+# Renamimg the columns to remove spaces
+colnames(U_B.df.train) <- c("CreditCard", "Online", "PersonalLoan")
+
+# Converting 'CreditCard' and 'Online' to factors with appropriate levels
+U_B.df.train$CreditCard <- factor(U_B.df.train$CreditCard, levels = c(0, 1), labels = c("No", "Yes"))
+U_B.df.train$Online <- factor(U_B.df.train$Online, levels = c(0, 1), labels = c("No", "Yes"))
+
+```
+
+
+##Print the probability
+
+```{r}
+
+print("Probability of Loan = 1 given CC = 1 and Online = 1:")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
